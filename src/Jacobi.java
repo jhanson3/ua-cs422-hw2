@@ -12,12 +12,13 @@ public class Jacobi {
 	
 	public static void main(String[] args) {
 		
+		if (args.length > 0)
+			n = Integer.parseInt(args[0]);
+		System.out.println(n);
 		if (args.length > 1)
-			n = Integer.parseInt(args[1]);
+			numProcs = Integer.parseInt(args[1]);
 		if (args.length > 2)
-			numProcs = Integer.parseInt(args[2]);
-		if (args.length > 3)
-			left = Integer.parseInt(args[3]);
+			left = Integer.parseInt(args[2]);
 
 	}
 
