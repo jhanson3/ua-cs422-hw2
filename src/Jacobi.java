@@ -11,16 +11,17 @@ import java.util.concurrent.Semaphore;
 public class Jacobi {
 
 	public static int n = 10;
-	public static int numProcs = 4;
+	public static int numProcs = 2;
 	public static double left = 10.0, right = 800.0, top = 10.0, bottom = 800.0, epsilon = 0.1;
 	public static double grid[][], newGrid[][];
 	public static int height;
 	public static double maxDiff[];
-	public static Semaphore sem;
+	public static Semaphore mutex, bar;
 	public static double arrive[];
 	public static JacobiThread threads[];
+	public static Thread active[];
 	
-	static final int MAXITERS = 10000;
+	static final int MAXITERS = 100;
 	//private static Timer timer;
 	
 	public static void main(String[] args) {
@@ -38,11 +39,13 @@ public class Jacobi {
 		if (args.length > 5)
 			epsilon = Integer.parseInt(args[5]);
 		
-		sem = new Semaphore(1);
+		mutex = new Semaphore(1);
+		bar = new Semaphore(0);
 		height = n/numProcs;
 		maxDiff = new double[numProcs];
 		arrive = new double[numProcs];
 		threads = new JacobiThread[numProcs];
+		active = new Thread[numProcs];
 		
 		grid = new double[n][n];
 		newGrid = new double[n][n];
@@ -69,10 +72,23 @@ public class Jacobi {
 		
 		for (int i=0; i<numProcs; i++) {
 			threads[i] = new JacobiThread(i+1);
-			threads[i].run();
+		}
+		for (int i=0; i<numProcs; i++) {
+			active[i] = new Thread(threads[i]);
+			active[i].start();
+		}
+		
+		while (true) {
+			int done = 0;
+			for (int i=0; i<numProcs; i++) {
+				if (!active[i].isAlive())
+					done++;
+			}
+			if (done == numProcs)
+				break;
 		}
 		printGrid();
-
+			
 	}
 	
 	/*
@@ -137,21 +153,6 @@ public class Jacobi {
 					grid[x][y] = newGrid[x][y];
 				}
 			}
-		}
-	}
-	
-	/*
-	 * barrier
-	 * Jeremiah Hanson
-	 * ----------------------------
-	 * dissemination barrier
-	 */
-	public static void barrier(int w) {
-		for (int s=1; s<(n/2); s++) {
-			arrive[w-1]++;
-			
-			int j = (w * 2)%numProcs;
-			while (arrive[j] < arrive[w-1]) continue;
 		}
 	}
 
