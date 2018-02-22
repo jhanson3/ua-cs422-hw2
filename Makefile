@@ -4,7 +4,8 @@ JC = javac
 .java.class:
 	$(JC) $(JFLAGS) $*.java
 
-CLASSES = src/Jacobi.java
+CLASSES = /Jacobi.java
+		  /JacobiThread.java
 
 all: classes
 

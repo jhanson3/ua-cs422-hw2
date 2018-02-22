@@ -1,3 +1,6 @@
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Semaphore;
 
 /*
@@ -20,6 +23,7 @@ public class Jacobi {
 	public static double arrive[];
 	public static JacobiThread threads[];
 	public static Thread active[];
+	public static long start, end;
 	
 	static final int MAXITERS = 100;
 	
@@ -36,7 +40,9 @@ public class Jacobi {
 		if (args.length > 4)
 			right = Integer.parseInt(args[4]);
 		if (args.length > 5)
-			epsilon = Integer.parseInt(args[5]);
+			bottom = Integer.parseInt(args[5]);
+		if (args.length > 6)
+			epsilon = Integer.parseInt(args[6]);
 		
 		mutex = new Semaphore(1);
 		bar = new Semaphore(0);
@@ -69,6 +75,8 @@ public class Jacobi {
 		//seqRun();       // Sequential Run
 		//printGrid();
 		
+		start = System.nanoTime();
+		
 		for (int i=0; i<numProcs; i++) {
 			threads[i] = new JacobiThread(i+1);
 		}
@@ -86,7 +94,14 @@ public class Jacobi {
 			if (done == numProcs)
 				break;
 		}
-		printGrid();
+		//printGrid();
+		end = System.nanoTime();
+		
+		try {
+			writeToFile();
+		} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 			
 	}
 	
@@ -112,6 +127,43 @@ public class Jacobi {
 			System.out.println();
 		}
 		System.out.println();
+	}
+	
+	/*
+	 * writeToFile
+	 * Jeremiah Hanson
+	 * --------------------------------
+	 * writes data to a file
+	 */
+	public static void writeToFile() throws FileNotFoundException, UnsupportedEncodingException {
+		PrintWriter writer = new PrintWriter("JacobiResults.txt", "UTF-8");
+		writer.println("n: " + n);
+		writer.println("numProcs: " + numProcs);
+		writer.println("Top: " + top);
+		writer.println("Left: " + left);
+		writer.println("Bottom: " + bottom);
+		writer.println("Right: " + right);
+		writer.println("Espilon: " + epsilon);
+		writer.printf("Time: %.9f", ((double)(end-start)/1000000000));
+		writer.println("sec");
+		writer.println();
+		
+		for (int x=0; x<n; x++) {
+			for (int y=0; y<n; y++) {
+				if (grid[x][y] < 10) {
+					writer.printf(" %.4f", grid[x][y]);
+				}
+				else if (grid[x][y] < 100) {
+					writer.printf(" %.3f", grid[x][y]);
+				}
+				else {
+					writer.printf(" %.2f", grid[x][y]);
+				}
+			}
+			writer.println();
+		}
+		
+		writer.close();
 	}
 	
 	/*
