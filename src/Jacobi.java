@@ -11,7 +11,7 @@ import java.util.concurrent.Semaphore;
 public class Jacobi {
 
 	public static int n = 10;
-	public static int numProcs = 2;
+	public static int numProcs = 4;
 	public static double left = 10.0, right = 800.0, top = 10.0, bottom = 800.0, epsilon = 0.1;
 	public static double grid[][], newGrid[][];
 	public static int height;
@@ -22,7 +22,6 @@ public class Jacobi {
 	public static Thread active[];
 	
 	static final int MAXITERS = 100;
-	//private static Timer timer;
 	
 	public static void main(String[] args) {
 		

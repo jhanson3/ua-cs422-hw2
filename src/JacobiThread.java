@@ -15,15 +15,24 @@ public class JacobiThread implements Runnable{
 	 */
 	public JacobiThread(int thread) {
 		worker = thread;
-		if (thread > 1)
-			firstRow = (thread - 1)*Jacobi.height;
-		else
+		if (Jacobi.numProcs < 4) {
+			if (thread > 1)
+				firstRow = (thread - 1)*Jacobi.height;
+			else
+				firstRow = (thread - 1)*Jacobi.height + 1;
+			
+			if (Jacobi.numProcs != 1 && Jacobi.numProcs%2 == 1)
+				lastRow = firstRow + Jacobi.height;
+			else if (Jacobi.numProcs == 1) 
+				lastRow = firstRow + Jacobi.height - 2;
+			else 
+				lastRow = firstRow + Jacobi.height - 1;
+		}
+		else {
 			firstRow = (thread - 1)*Jacobi.height + 1;
-		
-		if (Jacobi.numProcs%2 == 1)
 			lastRow = firstRow + Jacobi.height;
-		else
-			lastRow = firstRow + Jacobi.height - 1;
+		}
+		
 	}
 
 	/*
@@ -39,14 +48,16 @@ public class JacobiThread implements Runnable{
 			
 			for (int x=firstRow; x<lastRow; x++) {
 				for (int y=1; y<Jacobi.n-1; y++) {
-					Jacobi.newGrid[x][y] = (Jacobi.grid[x-1][y] + Jacobi.grid[x+1][y] + Jacobi.grid[x][y-1] + Jacobi.grid[x][y+1])*0.25;
+					if (x < Jacobi.n-1)
+						Jacobi.newGrid[x][y] = (Jacobi.grid[x-1][y] + Jacobi.grid[x+1][y] + Jacobi.grid[x][y-1] + Jacobi.grid[x][y+1])*0.25;
 				}
 			}
 			
 			barrier(worker);
 			for (int x=firstRow; x<lastRow; x++) {
 				for (int y=1; y<Jacobi.n-1; y++) {
-					Jacobi.grid[x][y] = (Jacobi.newGrid[x-1][y] + Jacobi.newGrid[x+1][y] + Jacobi.newGrid[x][y-1] + Jacobi.newGrid[x][y+1])*0.25;
+					if (x < Jacobi.n-1)
+						Jacobi.grid[x][y] = (Jacobi.newGrid[x-1][y] + Jacobi.newGrid[x+1][y] + Jacobi.newGrid[x][y-1] + Jacobi.newGrid[x][y+1])*0.25;
 				}
 			}
 			
@@ -56,14 +67,16 @@ public class JacobiThread implements Runnable{
 		for (int x=firstRow; x<lastRow; x++) {
 			for (int y=1; y<Jacobi.n-1; y++) {
 				double temp = 0.0;
-				if (myDiff < (temp = Math.abs(Jacobi.newGrid[x][y]-Jacobi.grid[x][y]))) {
-					myDiff = temp;
+				if (x < Jacobi.n-1){
+					if (myDiff < (temp = Math.abs(Jacobi.newGrid[x][y]-Jacobi.grid[x][y]))) {
+						myDiff = temp;
+					}
 				}
 			}
 		}
 		Jacobi.maxDiff[worker-1] = myDiff;
 		barrier(worker);
-		System.out.println("worker " + worker + " finished");
+		//System.out.println("worker " + worker + " finished");
 	}
 	
 	/*
@@ -80,14 +93,18 @@ public class JacobiThread implements Runnable{
 			Jacobi.arrive[w-1]++;
 			
 			int j = w % Jacobi.numProcs;
-			while (Jacobi.arrive[j] < Jacobi.arrive[w-1]);
+			while (Jacobi.arrive[j] < Jacobi.arrive[w-1]) {
+				System.out.print("");
+			}
 		}
 		else if (Jacobi.numProcs == 3) {
 			for (int s=1; s<2; s++) {
 				Jacobi.arrive[w-1]++;
 				
 				int j = ((w-1)+s) % Jacobi.numProcs;
-				while (Jacobi.arrive[j] < Jacobi.arrive[w-1]);
+				while (Jacobi.arrive[j] < Jacobi.arrive[w-1]) {
+					System.out.print("");
+				}
 			}
 		}
 		else if (Jacobi.numProcs == 4) {
@@ -95,7 +112,9 @@ public class JacobiThread implements Runnable{
 				Jacobi.arrive[w-1]++;
 				
 				int j = ((w-1)+s) % Jacobi.numProcs;
-				while (Jacobi.arrive[j] < Jacobi.arrive[w-1]) continue;
+				while (Jacobi.arrive[j] < Jacobi.arrive[w-1]) {
+					System.out.print("");
+				}
 			}
 		}
 		else {
